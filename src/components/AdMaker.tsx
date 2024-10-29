@@ -337,7 +337,7 @@ const AdMaker: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow mb-6">
             <h2 className="text-xl font-semibold mb-2">Ad Brief</h2>
             <p className="text-sm text-gray-600 mb-4">
-              The more info you give me the better your headlines will be, and upload a .csv of high performing examples in one column file please.
+              Here's where you fill me in. The more info you give me the better your headlines will be, I just need you to fill at least one field, BUT if you fill them all in you'll get better results. Oh and if you do upload a .csv of high performing examples, make it a one column file please.
             </p>
             <AdInput
               adData={formData}
@@ -380,7 +380,7 @@ const AdMaker: React.FC = () => {
             </p>
             {showLikedHeadlines && (
               <div className="mt-4">
-                <h3 className="text-lg font-semibold">Liked Headlines</h3>
+                <h3 className="text-lg font-semibold">Your Liked Headlines to date</h3>
                 {likedHeadlines.length === 0 ? (
                   <p className="text-gray-500 mt-2">No liked headlines yet.</p>
                 ) : (
