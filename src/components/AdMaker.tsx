@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import AdInput from './AdInput';
+import { LogoutButton } from '@/components/auth/auth-buttons';
+import { useSession } from 'next-auth/react';
 
 interface FormData {
   brandName: string;
@@ -21,12 +23,15 @@ interface AdData {
 }
 
 interface LikedHeadline {
+  id: string;
   headline: string;
   primaryText: string;
   timestamp: string;
+  userId: string;
 }
 
 const AdMaker: React.FC = () => {
+  const { data: session } = useSession();
   const [formData, setFormData] = useState<FormData>({
     brandName: '',
     product: '',
@@ -139,12 +144,20 @@ const AdMaker: React.FC = () => {
   const fetchLikedHeadlines = async () => {
     try {
       const response = await fetch('/api/liked-headlines');
-      if (response.ok) {
-        const data = await response.json();
-        setLikedHeadlines(data);
+      if (!response.ok) {
+        throw new Error('Failed to fetch liked headlines');
       }
+      const data = await response.json();
+      
+      // Sort headlines by timestamp, newest first
+      const sortedHeadlines = data.sort((a: LikedHeadline, b: LikedHeadline) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      
+      setLikedHeadlines(sortedHeadlines);
     } catch (error) {
       console.error('Error fetching liked headlines:', error);
+      alert('Failed to load liked headlines. Please try again.');
     }
   };
 
@@ -157,23 +170,28 @@ const AdMaker: React.FC = () => {
         },
         body: JSON.stringify({ headline, primaryText }),
       });
+      
       if (response.ok) {
-        fetchLikedHeadlines();
+        const data = await response.json();
+        if (data.duplicate) {
+          // If it's a duplicate, don't refresh the list
+          console.log('Headline already exists in your saved headlines');
+        } else {
+          // Only refresh if we added a new headline
+          await fetchLikedHeadlines();
+        }
       }
     } catch (error) {
       console.error('Error saving liked headline:', error);
     }
   };
 
-  const toggleLike = async (index: number) => {
+  const toggleLike = (index: number) => {
+    // Only toggle the UI state, don't save to Firebase yet
     setAdPreviews(prevAds => 
       prevAds.map((ad, i) => {
         if (i === index) {
-          const newLikedState = !ad.liked;
-          if (newLikedState) {
-            saveLikedHeadline(ad.headline, ad.primaryText);
-          }
-          return { ...ad, liked: newLikedState };
+          return { ...ad, liked: !ad.liked };
         }
         return ad;
       })
@@ -223,11 +241,95 @@ const AdMaker: React.FC = () => {
     setUseLikedHeadlines(prev => !prev);
   }, []);
 
+  const handleSaveLikedHeadlines = async () => {
+    const likedAds = adPreviews.filter(ad => ad.liked);
+    if (likedAds.length === 0) {
+      alert('Please like at least one headline to save.');
+      return;
+    }
+
+    try {
+      let savedCount = 0;
+      let duplicateCount = 0;
+
+      // Save each liked headline
+      for (const ad of likedAds) {
+        const response = await fetch('/api/liked-headlines', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            headline: ad.headline, 
+            primaryText: ad.primaryText 
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.duplicate) {
+            duplicateCount++;
+          } else {
+            savedCount++;
+          }
+        }
+      }
+      
+      // Refresh the liked headlines list
+      await fetchLikedHeadlines();
+      
+      // Show appropriate message
+      if (savedCount > 0) {
+        alert(`${savedCount} headline${savedCount > 1 ? 's' : ''} saved successfully!${
+          duplicateCount > 0 ? `\n${duplicateCount} duplicate${duplicateCount > 1 ? 's' : ''} skipped.` : ''
+        }`);
+      } else if (duplicateCount > 0) {
+        alert(`All ${duplicateCount} headline${duplicateCount > 1 ? 's were' : ' was'} already saved.`);
+      }
+    } catch (error) {
+      console.error('Error saving headlines:', error);
+      alert('Failed to save headlines. Please try again.');
+    }
+  };
+
+  // Add useEffect to fetch headlines when showLikedHeadlines changes
+  useEffect(() => {
+    if (showLikedHeadlines) {
+      fetchLikedHeadlines();
+    }
+  }, [showLikedHeadlines]);
+
+  const handleDeleteAllHeadlines = async () => {
+    if (window.confirm('Are you sure you want to delete all saved headlines? This cannot be undone.')) {
+      try {
+        const response = await fetch('/api/liked-headlines', {
+          method: 'DELETE',
+        });
+        
+        if (response.ok) {
+          setLikedHeadlines([]);
+          alert('All headlines deleted successfully');
+        } else {
+          throw new Error('Failed to delete headlines');
+        }
+      } catch (error) {
+        console.error('Error deleting headlines:', error);
+        alert('Failed to delete headlines. Please try again.');
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="bg-white shadow-sm">
+      <header className="bg-zinc-900 text-white shadow">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Headline Generator</h1>
+          <div>
+            <h1 className="text-2xl font-bold">The Headline Lab</h1>
+            {session?.user?.email && (
+              <p className="text-sm text-zinc-400">{session.user.email}</p>
+            )}
+          </div>
+          <LogoutButton />
         </div>
       </header>
       <main className="flex-grow bg-gray-100 p-4 overflow-auto">
@@ -255,6 +357,14 @@ const AdMaker: React.FC = () => {
               >
                 {showLikedHeadlines ? 'Hide Liked Headlines' : 'Show Liked Headlines'}
               </button>
+              {showLikedHeadlines && (
+                <button
+                  onClick={handleDeleteAllHeadlines}
+                  className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-200"
+                >
+                  Delete All Headlines
+                </button>
+              )}
               <button
                 onClick={toggleUseLikedHeadlines}
                 className={`p-2 text-white rounded transition-colors duration-200 ${
@@ -271,15 +381,19 @@ const AdMaker: React.FC = () => {
             {showLikedHeadlines && (
               <div className="mt-4">
                 <h3 className="text-lg font-semibold">Liked Headlines</h3>
-                <ul className="list-disc pl-5">
-                  {likedHeadlines.map((headline, index) => (
-                    <li key={index} className="mt-2">
-                      <p><strong>Headline:</strong> {headline.headline}</p>
-                      <p><strong>Primary Text:</strong> {headline.primaryText}</p>
-                      <p><small>Liked on: {new Date(headline.timestamp).toLocaleString()}</small></p>
-                    </li>
-                  ))}
-                </ul>
+                {likedHeadlines.length === 0 ? (
+                  <p className="text-gray-500 mt-2">No liked headlines yet.</p>
+                ) : (
+                  <ul className="list-disc pl-5">
+                    {likedHeadlines.map((headline) => (
+                      <li key={headline.id} className="mt-2">
+                        <p><strong>Headline:</strong> {headline.headline}</p>
+                        <p><strong>Primary Text:</strong> {headline.primaryText}</p>
+                        <p><small>Liked on: {new Date(headline.timestamp).toLocaleString()}</small></p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
           </div>
@@ -302,12 +416,20 @@ const AdMaker: React.FC = () => {
               ))}
             </div>
             {adPreviews.length > 0 && (
-              <button
-                onClick={handleDownload}
-                className="mt-4 p-2 bg-gray-500 text-white rounded hover:bg-green-500 transition-colors duration-200"
-              >
-                Download Selected Headlines
-              </button>
+              <div className="mt-4 flex space-x-4">
+                <button
+                  onClick={handleDownload}
+                  className="p-2 bg-gray-500 text-white rounded hover:bg-green-500 transition-colors duration-200"
+                >
+                  Download Selected Headlines
+                </button>
+                <button
+                  onClick={handleSaveLikedHeadlines}
+                  className="p-2 bg-gray-500 text-white rounded hover:bg-green-500 transition-colors duration-200"
+                >
+                  Save my liked headlines
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -316,4 +438,4 @@ const AdMaker: React.FC = () => {
   );
 };
 
-export default AdMaker;
+export { AdMaker };

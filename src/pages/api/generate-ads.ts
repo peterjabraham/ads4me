@@ -66,28 +66,36 @@ export default async function handler(
     Additional Rules and Exclusions: ${additionalRules}
     CSV Data: ${csvData}
 
+    Important Rules:
+    1. Never truncate words - only use complete words
+    2. If approaching character limit, use shorter complete words instead of cutting words off
+    3. Headlines must be 40 characters or less, using complete words only
+    4. Primary text must be 125 characters or less, using complete words only
+    5. Apply engaging and actionable writing techniques
+    6. Ensure each headline and text makes complete sense
+    7. No ellipsis or partial words
+
     Format the response as JSON with the following structure:
     {
       "ads": [
         {
-          "headline": "Headline text here (max 40 characters)",
-          "primaryText": "Primary text here (max 125 characters)"
+          "headline": "Complete headline here (max 40 chars)",
+          "primaryText": "Complete primary text here (max 125 chars)"
         },
         // ... (4 more similar objects)
       ]
     }
     
     Important:
-    1. Do not include any markdown formatting in your response. Return only the JSON object.
-    2. Ensure that each headline is no more than 40 characters long.
-    3. Ensure that each primary text is no more than 125 characters long.
-    4. If a generated headline or primary text exceeds the character limit, truncate it to fit within the limit.
-    5. Apply the engaging and actionable writing techniques of advertising legends in your generated content.`;
+    1. Do not include any markdown formatting in your response
+    2. Return only the JSON object
+    3. Verify that no words are cut off in the middle`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 1000,
+      temperature: 0.7, // Slightly increased for more creative variations
     });
 
     const result = completion.choices[0].message.content;
@@ -98,11 +106,23 @@ export default async function handler(
     let parsedResult;
     try {
       parsedResult = JSON.parse(cleanedResult || '{"ads": []}');
-      // Ensure character limits are enforced
-      parsedResult.ads = parsedResult.ads.map((ad: any) => ({
-        headline: ad.headline.slice(0, 40),
-        primaryText: ad.primaryText.slice(0, 125)
-      }));
+      
+      // Additional validation to ensure no partial words
+      parsedResult.ads = parsedResult.ads.map((ad: any) => {
+        // If we need to truncate, do it at word boundaries
+        const truncateToWordBoundary = (text: string, limit: number) => {
+          if (text.length <= limit) return text;
+          const truncated = text.substring(0, limit);
+          // Find the last space before the limit
+          const lastSpace = truncated.lastIndexOf(' ');
+          return lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated;
+        };
+
+        return {
+          headline: truncateToWordBoundary(ad.headline, 40),
+          primaryText: truncateToWordBoundary(ad.primaryText, 125)
+        };
+      });
     } catch (parseError) {
       console.error('Error parsing JSON:', parseError);
       console.log('Raw API response:', result);
