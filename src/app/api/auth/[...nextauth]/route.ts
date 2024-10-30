@@ -1,8 +1,9 @@
-import NextAuth from "next-auth";
-import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import NextAuth from 'next-auth'
+import GoogleProvider from 'next-auth/providers/google'
+import { JWT } from 'next-auth/jwt'
+import { Account, Session } from 'next-auth'
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -17,41 +18,34 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account }: { token: JWT; account: Account | null }) {
       if (account) {
-        token.accessToken = account.access_token;
-        token.provider = account.provider;
+        token.accessToken = account.access_token
+        token.provider = account.provider
       }
-      return token;
+      return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
-        session.user.id = token.sub ?? "";
-        session.user.provider = token.provider as string;
+        session.user.id = token.sub ?? ""
+        session.user.provider = token.provider as string
       }
-      return session;
+      return session
     },
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith(baseUrl)) {
-        return `${baseUrl}/dashboard`;
-      }
-      return `${baseUrl}/dashboard`;
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      // Always redirect to dashboard after sign in
+      return `${baseUrl}/dashboard`
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
-  useSecureCookies: process.env.NODE_ENV === "production",
-  cookies: {
-    sessionToken: {
-      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production"
-      }
-    }
-  }
-};
+  // Remove debug mode in production
+  // debug: process.env.NODE_ENV === 'development',
+  pages: {
+    signIn: '/',
+    error: '/error',
+  },
+  trustHost: true, // Add this line
+}
 
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
+const handler = NextAuth(authOptions)
+export { handler as GET, handler as POST }

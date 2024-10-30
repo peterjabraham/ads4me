@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
-import { saveLikedHeadline, removeLikedHeadline, getLikedHeadlines } from '../utils/likedHeadlines';
+import { saveLikedHeadline, removeLikedHeadline, getLikedHeadlines } from '@/app/utils/likedHeadlines';
 
 interface LikeButtonProps {
   headline: string;
