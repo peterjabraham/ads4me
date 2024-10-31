@@ -41,7 +41,7 @@ const nextConfig = {
         },
         {
           key: 'Content-Security-Policy',
-          value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.openai.com https://*.googleapis.com;"
+          value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.openai.com;"
         }
       ]
     }
@@ -52,40 +52,15 @@ const nextConfig = {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
-    FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
-    FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY
   },
-  // Experimental features
-  experimental: {
-    // Required for Firebase Admin SDK in server components
-    serverComponentsExternalPackages: ['firebase-admin']
-  },
-  // Webpack configuration for better module support
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Don't attempt to load firebase-admin on the client side
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-    }
-    return config;
-  },
   // Deployment configuration for Replit
-  output: 'standalone', // Optimizes for hosting platforms
-  // Build configuration
-  poweredByHeader: false, // Removes X-Powered-By header
-  compress: true, // Enables compression
-  generateEtags: true, // Enables etag generation
-  // Cache configuration
+  output: 'standalone',
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: true,
   onDemandEntries: {
-    // Period (in ms) where the server will keep pages in the buffer
     maxInactiveAge: 25 * 1000,
-    // Number of pages that should be kept simultaneously without being disposed
     pagesBufferLength: 2,
   },
 };

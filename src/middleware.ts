@@ -28,6 +28,12 @@ export default withAuth(
     recentRequests.push(now);
     ipRequestMap.set(ip, recentRequests);
 
+    const token = req.nextauth.token;
+
+    if (!token) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+
     // Add security headers
     const res = NextResponse.next();
     res.headers.set("X-DNS-Prefetch-Control", "on");

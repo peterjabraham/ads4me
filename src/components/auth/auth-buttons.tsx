@@ -2,8 +2,13 @@
 
 import { signIn, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
+import { useSession } from 'next-auth/react'
 
 export function LoginButton() {
+  const { data: session } = useSession()
+
+  if (session) return null
+
   const handleSignIn = () => {
     signIn('google', {
       callbackUrl: '/dashboard',
@@ -22,6 +27,10 @@ export function LoginButton() {
 }
 
 export function LogoutButton() {
+  const { data: session } = useSession()
+
+  if (!session) return null
+
   const handleSignOut = () => {
     signOut({
       callbackUrl: '/',

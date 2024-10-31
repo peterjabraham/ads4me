@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { useSession } from 'next-auth/react';
-import { saveLikedHeadline, removeLikedHeadline, getLikedHeadlines } from '@/utils/likedHeadlines';
+import { 
+  saveLikedHeadline, 
+  removeLikedHeadline, 
+  getLikedHeadlines 
+} from '@/utils/localStorageHeadlines';
 import { useToast } from '@/components/ui/use-toast';
 
 interface LikeButtonProps {
@@ -11,82 +15,68 @@ interface LikeButtonProps {
 }
 
 export function LikeButton({ headline }: LikeButtonProps) {
-  const { toast } = useToast();
   const { data: session } = useSession();
   const [isLiked, setIsLiked] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const checkIfLiked = async () => {
-      if (!session?.user?.id) return;
-
-      try {
-        const likedHeadlines = await getLikedHeadlines(session.user.id);
-        setIsLiked(likedHeadlines.some(h => h.headline === headline));
-      } catch (error) {
-        console.error('Error checking liked status:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to check liked status',
-          variant: 'destructive',
-        });
-      }
-    };
-
-    checkIfLiked();
+    if (session?.user?.id) {
+      const headlines = getLikedHeadlines(session.user.id);
+      setIsLiked(headlines.some(h => h.text === headline));
+    }
   }, [headline, session?.user?.id]);
 
-  const handleLike = async () => {
+  const handleLike = () => {
     if (!session?.user?.id) {
       toast({
-        title: 'Authentication Required',
-        description: 'Please sign in to like headlines',
-        variant: 'destructive',
+        title: "Authentication required",
+        description: "Please sign in to like headlines",
+        variant: "destructive",
       });
       return;
     }
 
-    setIsLoading(true);
     try {
       if (isLiked) {
-        await removeLikedHeadline(headline, session.user.id);
+        const headlines = getLikedHeadlines(session.user.id);
+        const headlineToRemove = headlines.find(h => h.text === headline);
+        if (headlineToRemove) {
+          removeLikedHeadline(headlineToRemove.id, session.user.id);
+        }
+        setIsLiked(false);
         toast({
-          title: 'Removed',
-          description: 'Headline removed from favorites',
+          title: "Removed from likes",
+          description: "Headline removed from your liked collection",
         });
       } else {
-        await saveLikedHeadline(headline, session.user.id);
+        saveLikedHeadline(headline, session.user.id);
+        setIsLiked(true);
         toast({
-          title: 'Saved',
-          description: 'Headline added to favorites',
+          title: "Added to likes",
+          description: "Headline saved to your liked collection",
         });
       }
-      setIsLiked(!isLiked);
     } catch (error) {
       console.error('Error handling like:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update headline status',
-        variant: 'destructive',
+        title: "Error",
+        description: "There was an error processing your request",
+        variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <button 
-      onClick={handleLike} 
-      className="focus:outline-none disabled:opacity-50"
-      disabled={isLoading}
+    <button
+      onClick={handleLike}
+      className="transition-colors duration-200 hover:text-red-500"
+      aria-label={isLiked ? "Unlike headline" : "Like headline"}
     >
       {isLiked ? (
-        <FaHeart className="text-red-500 text-xl" />
+        <FaHeart className="w-5 h-5 text-red-500" />
       ) : (
-        <FaRegHeart className="text-gray-500 text-xl hover:text-red-500 transition-colors" />
+        <FaRegHeart className="w-5 h-5" />
       )}
     </button>
   );
 }
-
-export default LikeButton;
