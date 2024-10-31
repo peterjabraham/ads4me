@@ -168,5 +168,26 @@ Recommended VSCode Extensions:
 - TypeScript + JavaScript
 
 
+## Recent Firebase Admin SDK Issues
+### Firebase Admin Initialization Pattern
+Problem: Initial implementation had issues with Promise-based initialization:
+```typescript
+// Problematic Pattern
+const { db } = getFirebaseAdmin(); // Type error: Property 'db' doesn't exist on Promise
 
+Solution: Use singleton pattern with pre-initialized instance:
 
+// Correct Pattern
+import { adminDb } from '@/lib/firebase-admin';
+const userRef = adminDb.collection('users').doc(userId);
+
+## Best Practices Learned
+Always use pre-initialized adminDb instance
+Avoid repeated initialization in API routes
+Proper error handling in Firebase operations
+Session validation before database operations
+
+## Current Limitations
+Firebase Admin SDK must be initialized server-side only
+Care needed with environment variables for Firebase private key
+Batch operations recommended for bulk deletions

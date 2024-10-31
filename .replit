@@ -8,6 +8,16 @@ channel = "stable-23_11"
 NODE_OPTIONS = "--max-old-space-size=2048"
 XDG_CONFIG_HOME = "/home/runner/.config"
 PATH = "/home/runner/$REPL_SLUG/node_modules/.bin"
+NEXT_TELEMETRY_DISABLED = "1"
 
 [packager]
 language = "nodejs"
+
+[deployment]
+run = "npm run start"
+build = "npm run build"
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 3000
+externalPort = 80

@@ -1,21 +1,32 @@
 # Deployment Guide
 
+## Prerequisites
+- Firebase Project Setup
+- Google OAuth Credentials
+- OpenAI API Key
+
+## Environment Variables Required
+```env
+NEXTAUTH_URL=your-domain
+NEXTAUTH_SECRET=your-secret
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=your-client-email
+FIREBASE_PRIVATE_KEY=your-private-key
+OPENAI_API_KEY=your-openai-key
+  
 ## Deployment Options
+
+## Deployment Steps
+Configure Firebase Admin SDK
+Set up Google OAuth
+Deploy to Replit
 
 ### 1. Replit Deployment
 - Fork the repository on Replit
 - Set up environment variables
 - Use the deployment command: `npm run build && npm start`
-
-### 2. Vercel Deployment
-- Connect GitHub repository
-- Configure environment variables
-- Enable automatic deployments
-
-### 3. Self-Hosted Deployment
-- Set up Node.js environment
-- Configure reverse proxy
-- Set up SSL certificates
 
 ## Security Checklist
 - [ ] Environment variables configured
@@ -45,6 +56,12 @@
    - Auth failure monitoring
    - Rate limit breach alerts
    - Unusual activity detection
+
+## Security Checklist
+ Firebase Admin SDK properly initialized
+ NextAuth configured with correct callbacks
+ API routes protected with session checks
+ Environment variables set
 
 ## Scaling Considerations
 

@@ -1,5 +1,10 @@
 # Detailed Setup Guide
-
+## Prerequisites
+- Node.js 18.x
+- Firebase Project
+- Google OAuth Credentials
+- OpenAI API Key
+  
 ## Firebase Setup
 1. Create a new Firebase project
 2. Enable Authentication
@@ -10,6 +15,8 @@
    - Choose production mode
    - Select region
    - Set up initial security rules
+4. Generate Service Account Key
+
 
 ### Firebase Admin SDK Setup
 1. Generate new private key
@@ -42,3 +49,8 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 FIREBASE_PROJECT_ID=your-project-id
 FIREBASE_CLIENT_EMAIL=your-client-email
 FIREBASE_PRIVATE_KEY=your-private-key
+
+## Firebase Admin Initialization
+import { adminDb } from '@/lib/firebase-admin';
+// Use adminDb directly in your components/routes
+

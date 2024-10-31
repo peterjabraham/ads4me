@@ -1,5 +1,25 @@
 # Ads-4-Me: AI-Powered Ad Generation Platform
 
+# Next.js AI Application
+## Overview
+A Next.js application using Firebase Admin SDK for data storage, NextAuth for authentication, and OpenAI API integration.
+## Key Features
+- Google Authentication
+- Firebase Admin SDK Integration
+- Protected API Routes
+- Headline Management System
+## Setup
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Configure environment variables (see SETUP.md)
+4. Run development server: `npm run dev`
+## Architecture
+See [ARCHITECTURE.md](./instructions/ARCHITECTURE.md) for detailed system design.
+## Deployment
+See [DEPLOYMENT.md](./instructions/DEPLOYMENT.md) for deployment instructions.
+## Known Issues
+See [KNOWN ISSUES.md](./instructions/KNOWN ISSUES.md) for current limitations and workarounds.
+
 ## Features Overview
 - 🤖 AI-Powered Ad Generation using OpenAI GPT
 - 🔐 Secure Authentication via Google Auth

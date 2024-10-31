@@ -16,6 +16,24 @@ Core Components:
     React Components using TypeScript
     Tailwind CSS for styling
     NextAuth.js for authentication
+Firebase Admin Layer
+Typescript:
+// Single Instance Pattern
+import { adminDb } from '@/lib/firebase-admin';
+// Usage in API routes
+const userRef = adminDb.collection('users').doc(userId);
+
+Authentication Layer
+Typescript:
+// NextAuth with Google Provider
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+// Protected API Route Pattern
+const session = await getServerSession(req, res, authOptions);
+if (!session?.user?.id) {
+  return res.status(401).json({ message: 'Unauthorized' });
+}
+
     
 API Layer:
     Next.js API Routes
@@ -27,6 +45,13 @@ Data Layer:
     Firestore for data persistence
     Client-side caching
     Server-side caching
+
+Firestore Collections Structure:
+users/
+    {userId}/
+        liked_headlines/
+            {headlineId}/
+
     
 Key Design Patterns:
     
