@@ -1,0 +1,13 @@
+run = "npm run dev"
+hidden = [".config", ".git", "node_modules"]
+
+[nix]
+channel = "stable-23_11"
+
+[env]
+NODE_OPTIONS = "--max-old-space-size=2048"
+XDG_CONFIG_HOME = "/home/runner/.config"
+PATH = "/home/runner/$REPL_SLUG/node_modules/.bin"
+
+[packager]
+language = "nodejs"
